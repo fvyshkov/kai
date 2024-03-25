@@ -1,39 +1,65 @@
-import os
 from pathlib import Path
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 from google_utils import create_album_with_authed_session, add_photo_to_album, find_last_file, upload_photo
 from datetime import datetime
 
+JS_DROP_FILE = """
+    var target = arguments[0],
+        offsetX = arguments[1],
+        offsetY = arguments[2],
+        document = target.ownerDocument || document,
+        window = document.defaultView || window;
+
+    var input = document.createElement('INPUT');
+    input.type = 'file';
+    input.onchange = function () {
+      var rect = target.getBoundingClientRect(),
+          x = rect.left + (offsetX || (rect.width >> 1)),
+          y = rect.top + (offsetY || (rect.height >> 1)),
+          dataTransfer = { files: this.files };
+
+      ['dragenter', 'dragover', 'drop'].forEach(function (name) {
+        var evt = document.createEvent('MouseEvent');
+        evt.initMouseEvent(name, !0, !0, window, 0, 0, 0, x, y, !1, !1, !1, !1, 0, null);
+        evt.dataTransfer = dataTransfer;
+        target.dispatchEvent(evt);
+      });
+
+      setTimeout(function () { document.body.removeChild(input); }, 25);
+    };
+    document.body.appendChild(input);
+    return input;
+"""
+
 # Zoom In Up Down Left Right Rotate Counter-Clockwise
 download_folder = '/Users/fvyshkov/Downloads'
-subject_texts = ['Rainbow piano']
+subject_texts = ['unicorn']
 filenames = ['/Users/fvyshkov/Downloads/rain.jpg']
 camera_movements_list = [
-    #[],
-    #['Rotate Clockwise'],
-    #['Zoom In'],
+    [],
+    ['Rotate Clockwise'],
+    ['Zoom In'],
     ['Zoom Out'],
 ]
 styles = ['realistic', 'Kandinsky', 'Matisse', 'Van Gogh', 'Marc Chagall']
+styles = ['Marc Chagall']
 
 img_table = []
 for subject_text in subject_texts:
-    for filename in filenames:
+    for filename_origin in filenames:
         for camera_movement in camera_movements_list:
             for style in styles:
                 img_table.append({
-                    'time_in_sec': 5,
+                    'time_in_sec': 4,
                     'default_duration': 8,
                     'sbj_text': subject_text,
                     'style_text': style,
-                    'filename': filename,
+                    'filename': filename_origin,
                     'camera_movements': camera_movement,
                 })
 
@@ -48,34 +74,6 @@ def create_image(row):
 
     def wait_for_element_by_xpath(xpath):
         return WebDriverWait(driver, 1000).until(EC.element_to_be_clickable((By.XPATH, xpath)))
-
-    JS_DROP_FILE = """
-        var target = arguments[0],
-            offsetX = arguments[1],
-            offsetY = arguments[2],
-            document = target.ownerDocument || document,
-            window = document.defaultView || window;
-    
-        var input = document.createElement('INPUT');
-        input.type = 'file';
-        input.onchange = function () {
-          var rect = target.getBoundingClientRect(),
-              x = rect.left + (offsetX || (rect.width >> 1)),
-              y = rect.top + (offsetY || (rect.height >> 1)),
-              dataTransfer = { files: this.files };
-    
-          ['dragenter', 'dragover', 'drop'].forEach(function (name) {
-            var evt = document.createEvent('MouseEvent');
-            evt.initMouseEvent(name, !0, !0, window, 0, 0, 0, x, y, !1, !1, !1, !1, 0, null);
-            evt.dataTransfer = dataTransfer;
-            target.dispatchEvent(evt);
-          });
-    
-          setTimeout(function () { document.body.removeChild(input); }, 25);
-        };
-        document.body.appendChild(input);
-        return input;
-    """
 
     def drag_and_drop_file(drop_target, path):
         driver = drop_target.parent
@@ -152,6 +150,7 @@ def create_image(row):
     download_path = "//span[@class='lg:inline text-[12px] sm:text-[14px]' and contains(text(), 'Download')]"
     download_b = wait_for_element_by_xpath(download_path)
     print('download!')
+    time.sleep(2)
     download_b.click()
     time.sleep(3)
     wait_for_element_by_xpath(download_path)
