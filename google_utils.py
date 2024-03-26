@@ -31,6 +31,40 @@ if not creds or not creds.valid:
 authed_session = AuthorizedSession(creds)
 
 
+def find_first_album_by_name(album_name):
+    """
+    Find the first Google Photos album by name and return its ID.
+
+    Parameters:
+    - authed_session: An AuthorizedSession instance.
+    - album_name: The name of the album to find.
+
+    Returns:
+    - The ID of the first album found with the given name, or None if not found.
+    """
+    # Google Photos API URL for listing albums
+    url = 'https://photoslibrary.googleapis.com/v1/albums'
+
+    while url:
+        # Make the GET request to list albums
+        response = authed_session.get(url)
+        response.raise_for_status()  # Check for errors
+
+        # Parse the response
+        albums_data = response.json()
+
+        # Search for the album by name
+        for album in albums_data.get('albums', []):
+            if album['title'].lower() == album_name.lower():
+                return album['id']  # Return the ID of the first matching album
+
+        # Google Photos API uses pagination for results
+        nextPageToken = albums_data.get('nextPageToken', None)
+        url = f'https://photoslibrary.googleapis.com/v1/albums?pageToken={nextPageToken}' if nextPageToken else None
+
+    return None  # Return None if no album with the given name is found
+
+
 def upload_photo(file_path):
     upload_url = 'https://photoslibrary.googleapis.com/v1/uploads'
     headers = {

@@ -1,11 +1,13 @@
 from pathlib import Path
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from google_utils import create_album_with_authed_session, add_photo_to_album, find_last_file, upload_photo
+from google_utils import create_album_with_authed_session, add_photo_to_album, find_last_file, upload_photo, \
+    find_first_album_by_name
 from datetime import datetime
 
 JS_DROP_FILE = """
@@ -38,8 +40,8 @@ JS_DROP_FILE = """
 
 # Zoom In Up Down Left Right Rotate Counter-Clockwise
 download_folder = '/Users/fvyshkov/Downloads'
-subject_texts = ['unicorn']
-filenames = ['/Users/fvyshkov/Downloads/rain.jpg']
+subject_texts = ['winter forest']
+filenames = ['/Users/fvyshkov/Downloads/texture_stone.jpg']
 camera_movements_list = [
     [],
     ['Rotate Clockwise'],
@@ -47,7 +49,6 @@ camera_movements_list = [
     ['Zoom Out'],
 ]
 styles = ['realistic', 'Kandinsky', 'Matisse', 'Van Gogh', 'Marc Chagall']
-styles = ['Marc Chagall']
 
 img_table = []
 for subject_text in subject_texts:
@@ -94,11 +95,14 @@ def create_image(row):
     element.click()
     driver.get("https://kaiber.ai/create")
     # choose type of generation (there are 3 of them)
-    type_element = wait_for_element_by_xpath("//img[@src = 'https://website-public-assets.kybercorp.org/web/flipbook/animation_2.webp']")
-    #actions = ActionChains(driver)
-    #actions.move_to_element(element).double_click().perform()
+    type_element = wait_for_element_by_xpath("//div[@class='h-full w-full mt-6']")
     time.sleep(1)
     type_element.click()
+
+    #type_element.click()
+    #actions = ActionChains(driver)
+    #actions.move_to_element(type_element).double_click().perform()
+    #type_element.click()
     # file uploading
     input_element = wait_for_element_by_xpath("//span[contains(text(),'upload file')]")
     path_to_image = filename
@@ -158,7 +162,11 @@ def create_image(row):
     driver.quit()
 
 
-album_id = create_album_with_authed_session(f'{datetime.now().strftime("%d%m%y")} AI AUTO')
+# Example usage
+album_name = f'{datetime.now().strftime("%d%m%y")} AI AUTO'
+album_id = find_first_album_by_name(album_name)
+if album_id is None:
+    album_id = create_album_with_authed_session(album_name)
 t = time.time()
 for image in img_table:
     create_image(image)
