@@ -1,5 +1,6 @@
 from pathlib import Path
 from selenium import webdriver
+from selenium.common import TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -40,14 +41,16 @@ JS_DROP_FILE = """
 
 # Zoom In Up Down Left Right Rotate Counter-Clockwise
 download_folder = '/Users/fvyshkov/Downloads'
-subject_texts = ['winter forest']
-filenames = ['/Users/fvyshkov/Downloads/texture_stone.jpg']
+subject_texts = ['hogwarts library']
+filenames = ['/Users/fvyshkov/Downloads/stairs.jpg']
 camera_movements_list = [
     [],
     ['Rotate Clockwise'],
     ['Zoom In'],
     ['Zoom Out'],
 ]
+camera_movements_list = [['Zoom In']]
+
 styles = ['realistic', 'Kandinsky', 'Matisse', 'Van Gogh', 'Marc Chagall']
 
 img_table = []
@@ -56,7 +59,7 @@ for subject_text in subject_texts:
         for camera_movement in camera_movements_list:
             for style in styles:
                 img_table.append({
-                    'time_in_sec': 4,
+                    'time_in_sec': 3,
                     'default_duration': 8,
                     'sbj_text': subject_text,
                     'style_text': style,
@@ -95,9 +98,27 @@ def create_image(row):
     element.click()
     driver.get("https://kaiber.ai/create")
     # choose type of generation (there are 3 of them)
-    type_element = wait_for_element_by_xpath("//div[@class='h-full w-full mt-6']")
+    #type_element = wait_for_element_by_xpath("//div[@class='h-full w-full mt-6']")
+    #time.sleep(1)
+    #type_element.click()
+    first_type = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((
+        By.XPATH, "//div[@class='h-full w-full mt-6']")))
+    first_type.click()
     time.sleep(1)
-    type_element.click()
+    try:
+        new_type = WebDriverWait(driver, 2).until(EC.element_to_be_clickable((
+            By.XPATH, "//div[@class='h-full w-full mt-6']")))
+    except TimeoutException:
+        new_type = None
+    while new_type is not None:
+        new_type.click()
+        time.sleep(1)
+        try:
+            new_type = WebDriverWait(driver, 2).until(EC.element_to_be_clickable((
+                By.XPATH, "//div[@class='h-full w-full mt-6']")))
+        except TimeoutException:
+            new_type = None
+
 
     #type_element.click()
     #actions = ActionChains(driver)
@@ -164,7 +185,7 @@ def create_image(row):
 
 # Example usage
 album_name = f'{datetime.now().strftime("%d%m%y")} AI AUTO'
-album_id = find_first_album_by_name(album_name)
+album_id = None #find_first_album_by_name(album_name)
 if album_id is None:
     album_id = create_album_with_authed_session(album_name)
 t = time.time()
