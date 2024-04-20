@@ -41,15 +41,15 @@ JS_DROP_FILE = """
 
 # Zoom In Up Down Left Right Rotate Counter-Clockwise
 download_folder = '/Users/fvyshkov/Downloads'
-subject_texts = ['hogwarts library']
-filenames = ['/Users/fvyshkov/Downloads/stairs.jpg']
+subject_texts = ['dolphins dance']
+filenames = ['/Users/fvyshkov/Downloads/dolphins.jpg']
 camera_movements_list = [
-    [],
-    ['Rotate Clockwise'],
     ['Zoom In'],
     ['Zoom Out'],
+    ['Rotate Clockwise'],
+    #[]
 ]
-camera_movements_list = [['Zoom In']]
+#camera_movements_list = [['Zoom In']]
 
 styles = ['realistic', 'Kandinsky', 'Matisse', 'Van Gogh', 'Marc Chagall']
 
@@ -59,7 +59,7 @@ for subject_text in subject_texts:
         for camera_movement in camera_movements_list:
             for style in styles:
                 img_table.append({
-                    'time_in_sec': 3,
+                    'time_in_sec': 4,
                     'default_duration': 8,
                     'sbj_text': subject_text,
                     'style_text': style,
@@ -158,13 +158,17 @@ def create_image(row):
     for camera_move in camera_movements:
         wait_for_element_by_xpath(f"//span[text()='{camera_move}']").click()
     slider = wait_for_element_by_xpath("//span[@class='bg-primary text-dark w-12 py-1 px-2 text-lg text-center font-semibold']")
-    driver.execute_script("arguments[0].textContent = arguments[1];", slider, '0')
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    #driver.execute_script("arguments[0].textContent = arguments[1];", slider, '0')
+    #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(1)
     print('boomerang')
-    time.sleep(1)
-    checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
-    checkboxes[1].click()
+    #checkboxes = driver.find_elements(By.XPATH, "//label[contains(@for,'Video')]/preceding-sibling::input")
+    #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    #driver.execute_script("arguments[0].scrollIntoView();", checkboxes[0])
+    #@time.sleep(1000)
+    #checkboxes[0].click()
+    boomer = wait_for_element_by_xpath("//label[contains(@for,'Video')]/preceding-sibling::input")
+    boomer.click()
     gen_b = driver.find_elements(By.XPATH, "//*[contains(text(), 'Generate Previews')]")
     gen_b[1].click()
     print('waiting for previews')
@@ -184,7 +188,7 @@ def create_image(row):
 
 
 # Example usage
-album_name = f'{datetime.now().strftime("%d%m%y")} AI AUTO'
+album_name = f'{datetime.now().strftime("%d%m%y")} AI AUTO {subject_texts[0]}'
 album_id = None #find_first_album_by_name(album_name)
 if album_id is None:
     album_id = create_album_with_authed_session(album_name)
